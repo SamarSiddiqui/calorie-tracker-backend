@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-    // Load .env file if it exists (for local development)
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found, relying on environment variables:", err)
     }
@@ -56,7 +55,7 @@ func main() {
     r := gin.Default()
     r.Use(gin.Logger())
     r.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"http://localhost:5174", "https://calorie-tracker-frontend.vercel.app"},
+        AllowOrigins:     []string{"http://localhost:5174", "https://calorie-tracker-frontend-ebon.vercel.app"},
         AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
         ExposeHeaders:    []string{"Content-Length"},
@@ -71,6 +70,11 @@ func main() {
     r.POST("/calories/add", auth.AuthMiddleware(), services.AddCalorie(client))
     r.GET("/calories/view", auth.AuthMiddleware(), services.ViewCalories(client))
     r.DELETE("/calories/delete/:id", auth.AuthMiddleware(), services.DeleteCalorie(client))
+
+    // Optional: Health check endpoint
+    r.GET("/health", func(c *gin.Context) {
+        c.JSON(200, gin.H{"status": "ok"})
+    })
 
     log.Println("Starting server on :8080")
     if err := r.Run(":8080"); err != nil {
