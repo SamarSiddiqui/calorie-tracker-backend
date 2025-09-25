@@ -6,6 +6,7 @@ import (
     "calorie-tracker/services"
     "log"
     "os"
+    "strings"
     "time"
 
     "github.com/gin-contrib/cors"
@@ -29,6 +30,9 @@ func main() {
     if googleClientID == "" || googleClientSecret == "" || jwtSecret == "" || mongoURI == "" {
         log.Fatal("Missing environment variables")
     }
+
+    // Remove trailing slash from CALLBACK_URL to avoid double slash
+    callbackURL = strings.TrimSuffix(callbackURL, "/")
     log.Println("Environment variables loaded:", googleClientID, mongoURI, "Callback URL:", callbackURL)
 
     auth.JwtSecret = []byte(jwtSecret)
@@ -71,7 +75,6 @@ func main() {
     r.GET("/calories/view", auth.AuthMiddleware(), services.ViewCalories(client))
     r.DELETE("/calories/delete/:id", auth.AuthMiddleware(), services.DeleteCalorie(client))
 
-    // Optional: Health check endpoint
     r.GET("/health", func(c *gin.Context) {
         c.JSON(200, gin.H{"status": "ok"})
     })
