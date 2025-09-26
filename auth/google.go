@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -21,7 +20,6 @@ import (
 )
 
 var GoogleOauthConfig *oauth2.Config
-var JwtSecret []byte
 
 func GoogleLogin(c *gin.Context) {
 	state := generateStateOauthCookie(c)
