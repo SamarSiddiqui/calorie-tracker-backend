@@ -40,7 +40,7 @@ func main() {
     auth.GoogleOauthConfig = &oauth2.Config{
         ClientID:     googleClientID,
         ClientSecret: googleClientSecret,
-        RedirectURL:  callbackURL + "/auth/google/callback",
+        RedirectURL:  "https://calorie-tracker-backend-6nfn.onrender.com/auth/google/callback",
         Scopes: []string{
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
