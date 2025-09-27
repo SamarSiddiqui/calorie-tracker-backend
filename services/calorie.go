@@ -135,3 +135,69 @@ func DeleteCalorie(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Calorie entry deleted"})
 	}
 }
+
+func UpdateCalorie(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		entryIDStr := c.Param("id")
+		log.Println("Updating entry ID:", entryIDStr)
+
+		entryID, err := primitive.ObjectIDFromHex(entryIDStr)
+		if err != nil {
+			log.Println("INVALID ENTRY ID:", err)
+			c.JSON(400, gin.H{"error": "Invalid entry ID"})
+			return
+		}
+
+		userIDStr, exists := c.Get("user_id")
+		if !exists {
+			log.Println("USER ID MISSING from context")
+			c.JSON(401, gin.H{"error": "Unauthorized"})
+			return
+		}
+		log.Println("User ID from context:", userIDStr)
+
+		userID, err := primitive.ObjectIDFromHex(userIDStr.(string))
+		if err != nil {
+			log.Println("INVALID USER ID:", err)
+			c.JSON(400, gin.H{"error": "Invalid user ID"})
+			return
+		}
+
+		var entry models.CalorieEntry
+		if err := c.ShouldBindJSON(&entry); err != nil {
+			log.Println("BIND JSON ERROR:", err)
+			c.JSON(400, gin.H{"error": "Invalid request payload"})
+			return
+		}
+		log.Println("Received update entry:", entry)
+
+		collection := client.Database("sso").Collection("calories")
+		result, err := collection.UpdateOne(
+			context.Background(),
+			bson.M{
+				"_id":     entryID,
+				"user_id": userID,
+			},
+			bson.M{
+				"$set": bson.M{
+					"date":     entry.Date,
+					"meal":     entry.Meal,
+					"calories": entry.Calories,
+				},
+			},
+		)
+		if err != nil {
+			log.Println("UPDATE CALORIE ERROR:", err)
+			c.JSON(500, gin.H{"error": "Failed to update calorie entry"})
+			return
+		}
+
+		if result.MatchedCount == 0 {
+			log.Println("NO ENTRY FOUND for ID:", entryIDStr)
+			c.JSON(404, gin.H{"error": "Entry not found or not owned by user"})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Calorie entry updated"})
+	}
+}
