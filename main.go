@@ -25,22 +25,24 @@ func main() {
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	jwtSecret := os.Getenv("JWT_SECRET")
 	mongoURI := os.Getenv("MONGODB_URI")
-	callbackURL := os.Getenv("CALLBACK_URL")
 
 	if googleClientID == "" || googleClientSecret == "" || jwtSecret == "" || mongoURI == "" {
 		log.Fatal("Missing environment variables")
 	}
 
-	// Remove trailing slash from CALLBACK_URL to avoid double slash
-	callbackURL = strings.TrimSuffix(callbackURL, "/")
-	log.Println("Environment variables loaded:", googleClientID, mongoURI, "Callback URL:", callbackURL)
+	log.Println("Environment variables loaded:", googleClientID, mongoURI)
 
 	auth.JwtSecret = []byte(jwtSecret)
+
+	redirectURL := "http://localhost:8080/auth/google/callback"
+	if os.Getenv("RENDER") == "true" {
+		redirectURL = "https://calorie-tracker-backend-6nfn.onrender.com/auth/google/callback"
+	}
 
 	auth.GoogleOauthConfig = &oauth2.Config{
 		ClientID:     googleClientID,
 		ClientSecret: googleClientSecret,
-		RedirectURL:  "https://calorie-tracker-backend-6nfn.onrender.com/auth/google/callback",
+		RedirectURL:  redirectURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -60,7 +62,7 @@ func main() {
 	r.Use(gin.Logger())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5174", "https://calorie-tracker-frontend-ebon.vercel.app"},
-		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -74,6 +76,7 @@ func main() {
 	r.POST("/calories/add", auth.AuthMiddleware(), services.AddCalorie(client))
 	r.GET("/calories/view", auth.AuthMiddleware(), services.ViewCalories(client))
 	r.DELETE("/calories/delete/:id", auth.AuthMiddleware(), services.DeleteCalorie(client))
+	r.PUT("/calories/update/:id", auth.AuthMiddleware(), services.UpdateCalorie(client))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
