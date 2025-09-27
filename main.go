@@ -29,7 +29,6 @@ func main() {
 		log.Fatal("Missing environment variables")
 	}
 
-	log.Println("Environment variables loaded:", googleClientID, mongoURI)
 
 	auth.JwtSecret = []byte(jwtSecret)
 
@@ -49,7 +48,6 @@ func main() {
 		},
 		Endpoint: google.Endpoint,
 	}
-	log.Println("Google OAuth config initialized:", auth.GoogleOauthConfig.ClientID, "RedirectURL:", auth.GoogleOauthConfig.RedirectURL)
 
 	client, err := db.Connect(mongoURI)
 	if err != nil {
@@ -81,7 +79,6 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	log.Println("Starting server on :8080")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
