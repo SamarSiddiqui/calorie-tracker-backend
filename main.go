@@ -6,7 +6,6 @@ import (
 	"calorie-tracker/services"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
